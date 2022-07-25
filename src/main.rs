@@ -4,7 +4,6 @@ use dotenv::dotenv;
 use std::collections::HashSet;
 use std::env;
 
-use serenity::async_trait;
 use serenity::prelude::*;
 use serenity::model::prelude::*;
 use serenity::client::{Client, Context, EventHandler};
@@ -14,12 +13,21 @@ use serenity::framework::standard::{help_commands, StandardFramework, CommandRes
 
 #[group]
 #[commands(ping)]
+
 struct General;
 
 struct Handler;
 
-#[async_trait]
-impl EventHandler for Handler {}
+#[serenity::async_trait]
+impl EventHandler for Handler {
+    async fn ready(&self, _ctx: Context, _data_about_bot: Ready) {
+        println!("ready!");
+    }
+
+    async fn cache_ready(&self, ctx: Context, guilds: Vec<GuildId>) {
+        ctx.set_presence(Some(Activity::streaming(format!("!help | {} server(s)", guilds.len()), "https://www.twitch.tv/moby25k")), OnlineStatus::Online).await;
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -48,7 +56,10 @@ async fn main() {
     }
 }
 
-#[command]
+#[command("ping")]
+#[description = "Pings the bot!"]
+#[usage = "!ping"]
+#[example = "!ping"]
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply(ctx, "Pong!").await?;
 
